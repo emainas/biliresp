@@ -1,6 +1,6 @@
 # biliresp
 
-<p>
+<p align="center">
   <img src="docs/img/profile.png" alt="Electrostatic potential for biliverdin" width="200">
 </p>
 
