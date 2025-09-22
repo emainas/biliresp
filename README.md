@@ -15,7 +15,7 @@
 
 > **Status:** pre-release, under active development. Interfaces may change without notice.
 
-Utilities for parsing electrostatic potential output (In Terachem this is included in `resp.out`) and ESP grid (In Terachem this is outputed as `esp.xyz`) files. The package supplies:
+Utilities for parsing electrostatic potential output (In [TeraChem](http://www.petachem.com/products.html) this is included in `resp.out`) and ESP grid (In [TeraChem](http://www.petachem.com/products.html) this is outputed as `esp.xyz`) files. The package supplies:
 
 - 📄 A parser (`resp.ParseRespDotOut`) for extracting RESP frames and ESP grids from an ab initio Molecular Dynamics trajectory or QM/MM trajectory (or a single conformer calculation can be used).
 - 🧮 A linear ESP charge fitting implementation (`linearESPcharges.linear`).
