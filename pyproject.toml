@@ -1,0 +1,22 @@
+[build-system]
+requires = [
+    "setuptools>=61",
+    "wheel",
+]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "biliresp"
+version = "0.1.0"
+description = "Tools for parsing RESP output and ESP grid data"
+readme = "README.md"
+requires-python = ">=3.9"
+authors = [
+    { name = "E. Mainas" },
+]
+dependencies = []
+
+[tool.setuptools]
+packages = ["resp"]
+package-dir = {"" = "src"}
+
