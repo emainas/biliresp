@@ -1,0 +1,43 @@
+# Python caches and artifacts
+__pycache__/
+*.py[cod]
+*.so
+*.dylib
+*.pyd
+
+# Distribution / packaging
+.Python
+build/
+dist/
+*.egg-info/
+.eggs/
+
+# Environments
+.venv/
+venv/
+env/
+ENV/
+
+# Testing / coverage
+.pytest_cache/
+.coverage
+htmlcov/
+
+# Editors / tooling
+.mypy_cache/
+.pyre/
+.pytype/
+.ipynb_checkpoints/
+.idea/
+.vscode/
+*.swp
+
+# MkDocs site output
+site/
+docs/site/
+
+# macOS
+.DS_Store
+
+# Logs
+*.log

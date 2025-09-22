@@ -1,6 +1,8 @@
 # biliresp
 
-![Electrostatic potential for biliverdin](docs/img/profile.png)
+<p align="center">
+  <img src="docs/img/profile.png" alt="Electrostatic potential for biliverdin" width="600">
+</p>
 
 Utilities for parsing electrostatic potential output (In Terachem this is included in `resp.out`) and ESP grid (In Terachem this is outputed as `esp.xyz`) files. The package supplies:
 
