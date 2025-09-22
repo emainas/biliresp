@@ -4,6 +4,14 @@
   <img src="docs/img/profile.png" alt="Electrostatic potential for biliverdin" width="600">
 </p>
 
+<p align="center">
+  <a href="https://github.com/emainas/biliresp/actions">
+    <img src="https://img.shields.io/badge/status-alpha-orange" alt="Status: alpha">
+  </a>
+</p>
+
+> **Status:** pre-release, under active development. Interfaces may change without notice.
+
 Utilities for parsing electrostatic potential output (In Terachem this is included in `resp.out`) and ESP grid (In Terachem this is outputed as `esp.xyz`) files. The package supplies:
 
 - A parser (`resp.ParseRespDotOut`) for extracting RESP frames and ESP grids from an ab initio Molecular Dynamics trajectory or QM/MM trajectory (or a single conformer calculation can be used).

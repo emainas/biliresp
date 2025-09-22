@@ -7,7 +7,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "biliresp"
-version = "0.1.0"
+version = "0.1.0-alpha"
 description = "Tools for parsing RESP output and ESP grid data"
 readme = "README.md"
 requires-python = ">=3.9"
