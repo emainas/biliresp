@@ -32,14 +32,3 @@ Use `-k` to narrow to a single test module when iterating, for example:
 PYTHONPATH=src pytest -s tests/test_dipole.py
 ```
 
-## Build the documentation
-
-Install MkDocs and (optionally) a theme such as `mkdocs-material`, then serve the docs locally:
-
-```bash
-python -m pip install mkdocs mkdocs-material
-mkdocs serve
-```
-
-Open the printed local URL in your browser to browse the documentation.
-

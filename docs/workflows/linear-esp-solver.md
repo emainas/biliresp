@@ -4,11 +4,11 @@ The linear solver fits electrostatic potential (ESP) charges that reproduce grid
 
 ## Pipeline
 
-1. **Parse RESP output** with `ParseRespDotOut` to obtain atomic positions and RESP ESP charges for each frame.
+1. **Parse Terachem RESP output** with `ParseRespDotOut` to obtain atomic positions and RESP ESP charges for each frame.
 2. **Read ESP grid** points from `esp.xyz`.
 3. **Build the design matrix** `A` where `A[i, j] = 1 / r_ij` for grid point `i` and atom `j`.
-4. **Solve** the constrained least squares problem `A q ≈ V` subject to `Σ q = Q` using one of two solvers:
-   - `explicit_solution`: closed-form projection that first finds the unconstrained least squares solution and then enforces the total charge.
+4. **Solve** the constrained optimization problem `A q ≈ V` subject to `Σ q = Q` using one of two solvers:
+   - `explicit_solution`: closed-form projection that first finds the unconstrained least squares solution and then enforces the total charge (Lagrange multiplier method).
    - `KKTblock_solution`: solves the block matrix from the Karush–Kuhn–Tucker conditions in a single shot.
 
 Both solvers accept an optional `ridge` hyper-parameter if you want to add a small diagonal Tikhonov term for numerical stability.

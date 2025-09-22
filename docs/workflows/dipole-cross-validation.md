@@ -8,9 +8,9 @@
 
 The function parses the last "ESP unrestrained charges" block, the center of mass, and the dipole magnitude/vector from `resp.out`, then computes dipoles in Debye via:
 
-```python
-μ = Σ q_A (R_A - R_COM)
-```
+$$
+\mu = \sum_A q_A (R_A - R_{\text{COM}})
+$$
 
 with coordinates expressed in bohr. It returns a dictionary containing the vectors, magnitudes, and the deltas relative to the QM reference.
 
