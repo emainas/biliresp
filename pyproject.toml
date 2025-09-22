@@ -14,9 +14,10 @@ requires-python = ">=3.9"
 authors = [
     { name = "E. Mainas" },
 ]
-dependencies = []
+dependencies = [
+    "numpy>=1.21",
+]
 
 [tool.setuptools]
 packages = ["resp"]
 package-dir = {"" = "src"}
-
