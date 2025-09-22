@@ -1,8 +1,10 @@
 # biliresp
 
-Utilities for parsing RESP output (`resp.out`) and ESP grid (`esp.xyz`) files. The package supplies:
+![Electrostatic potential for biliverdin](docs/img/profile.png)
 
-- A parser (`resp.ParseRespDotOut`) for extracting RESP frames and ESP grids.
+Utilities for parsing electrostatic potential output (In Terachem this is included in `resp.out`) and ESP grid (In Terachem this is outputed as `esp.xyz`) files. The package supplies:
+
+- A parser (`resp.ParseRespDotOut`) for extracting RESP frames and ESP grids from an ab initio Molecular Dynamics trajectory or QM/MM trajectory (or a single conformer calculation can be used).
 - A linear ESP charge fitting implementation (`linearESPcharges.linear`).
 - Dipole post-processing helpers (`dipole.three_dipoles_last_frame`).
 - Command-line entry points in `scripts/` for quick comparisons.
@@ -36,23 +38,3 @@ python scripts/print_dipoles.py data/raw/resp.out data/raw/esp.xyz 78 --frame -1
 ```
 
 Both scripts accept `--help` for a summary of arguments. Swap `--solver kkt` to use the block KKT solver.
-
-## Documentation site
-
-MkDocs config lives in `mkdocs.yml`. Install MkDocs (and optionally `mkdocs-material`) and serve locally:
-
-```bash
-python -m pip install mkdocs mkdocs-material
-mkdocs serve
-```
-
-Navigate to the printed URL to browse the generated documentation, which covers project setup and the two workflows above.
-
-## Packaging and distribution
-
-The project already exposes the package via `pyproject.toml`. Once you create a GitHub repository:
-
-1. Commit the sources, tests, and documentation.
-2. Push to GitHub.
-3. (Optional) Enable GitHub Pages and publish the MkDocs site via `mkdocs gh-deploy`.
-
