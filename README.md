@@ -1,10 +1,10 @@
 # biliresp
 
-<p align="center">
+<p>
   <img src="docs/img/profile.png" alt="Electrostatic potential for biliverdin" width="200">
 </p>
 
-<p align="center">
+<p>
   <a href="https://github.com/emainas/biliresp/actions">
     <img src="https://img.shields.io/badge/status-alpha-orange" alt="Status: alpha">
   </a>
