@@ -22,6 +22,10 @@ Utilities for parsing electrostatic potential output (In [TeraChem](http://www.p
 - 📊 Dipole post-processing helpers (`dipole.three_dipoles_last_frame`).
 - 🛠️ Command-line entry points in `scripts/` for quick comparisons.
 
+## Documentation
+
+Full documentation, including guides and API references, lives on the project site: [biliresp Docs](https://emainas.github.io/biliresp/getting-started/).
+
 ## Quick start 🚀
 
 ```bash
