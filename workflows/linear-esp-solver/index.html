@@ -99,6 +99,10 @@
               <ul class="nav flex-column">
               </ul>
             </li>
+            <li class="nav-item" data-bs-level="2"><a href="#mathematical-derivation" class="nav-link">Mathematical derivation</a>
+              <ul class="nav flex-column">
+              </ul>
+            </li>
             <li class="nav-item" data-bs-level="2"><a href="#programmatic-use" class="nav-link">Programmatic use</a>
               <ul class="nav flex-column">
               </ul>
@@ -130,6 +134,41 @@
 <li><code>--frame</code>: zero-based frame index (use <code>-1</code> for the last frame).</li>
 <li>The output lists each atom index with the RESP charge, the fitted charge, and the difference. A footer prints charge conservation, RMSE, and RRMS metrics so you can quickly gauge the fit quality.</li>
 </ul>
+<h2 id="mathematical-derivation">Mathematical derivation</h2>
+<p>The objective is to minimise the grid misfit while enforcing the desired total charge:</p>
+<div class="arithmatex">\[
+\begin{aligned}
+\min_{q}\ &amp; \frac{1}{2}\lVert A q - V \rVert_2^2 \\
+\text{s.t.}\ &amp; \mathbf{1}^\top q = Q.
+\end{aligned}
+\]</div>
+<p>Using the Lagrangian <span class="arithmatex">\(\mathcal{L}(q, \lambda) = \tfrac{1}{2}\lVert A q - V \rVert_2^2 + \lambda (\mathbf{1}^\top q - Q)\)</span> gives the stationary conditions</p>
+<div class="arithmatex">\[
+\nabla_q \mathcal{L} = A^\top(Aq - V) + \lambda\,\mathbf{1} = 0,\qquad \nabla_\lambda \mathcal{L} = \mathbf{1}^\top q - Q = 0.
+\]</div>
+<p>Defining <span class="arithmatex">\(H = A^\top A\)</span> and <span class="arithmatex">\(g = A^\top V\)</span> leads to the Karush–Kuhn–Tucker system</p>
+<div class="arithmatex">\[
+\begin{pmatrix}
+H &amp; \mathbf{1} \\
+\mathbf{1}^\top &amp; 0
+\end{pmatrix}
+\begin{pmatrix}
+q \\
+\lambda
+\end{pmatrix} =
+\begin{pmatrix}
+g \\
+Q
+\end{pmatrix}.
+\]</div>
+<p>Rather than solving the <span class="arithmatex">\((N+1)\times(N+1)\)</span> block system directly, the implementation projects the unconstrained least-squares solution onto the charge-conserving hyperplane:</p>
+<ol>
+<li>Solve <span class="arithmatex">\(H q_0 = g\)</span> to obtain the unconstrained solution (<code>q0</code>).</li>
+<li>Solve <span class="arithmatex">\(H c = \mathbf{1}\)</span> for the correction direction (<code>c</code>).</li>
+<li>Compute <span class="arithmatex">\(\alpha = \mathbf{1}^\top c\)</span> and <span class="arithmatex">\(s = \mathbf{1}^\top q_0\)</span>.</li>
+<li>Project: <span class="arithmatex">\(q = q_0 - \frac{s - Q}{\alpha}\, c\)</span>.</li>
+</ol>
+<p>If numerical damping is requested, <span class="arithmatex">\(H\)</span> is replaced with <span class="arithmatex">\(H + \eta I\)</span> (with a small <span class="arithmatex">\(\eta &gt; 0\)</span>) in the two linear solves above. The procedure yields the same result as the full KKT solve but avoids explicitly forming the block matrix.</p>
 <h2 id="programmatic-use">Programmatic use</h2>
 <p>You can access the components directly:</p>
 <pre><code class="language-python">from linearESPcharges.linear import prepare_linear_system, explicit_solution

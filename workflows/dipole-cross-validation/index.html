@@ -99,6 +99,10 @@
               <ul class="nav flex-column">
               </ul>
             </li>
+            <li class="nav-item" data-bs-level="2"><a href="#parity-visualisation" class="nav-link">Parity visualisation</a>
+              <ul class="nav flex-column">
+              </ul>
+            </li>
             <li class="nav-item" data-bs-level="2"><a href="#programmatic-use" class="nav-link">Programmatic use</a>
               <ul class="nav flex-column">
               </ul>
@@ -148,6 +152,13 @@ Lagrange multiplier fit (explicit)
   Δ|μ| vs QM (Debye):     0.000222
 </code></pre>
 <p>Use this readout to sanity-check that your fitted charges reproduce the QM dipole within an acceptable tolerance before exporting them to downstream workflows.</p>
+<h2 id="parity-visualisation">Parity visualisation</h2>
+<p>The example notebook in <code>notebooks/</code> produces a parity plot comparing the QM dipole magnitude against the TeraChem ESP reconstruction across every frame. The figure below (available at <code>docs/img/dipole_parity.pdf</code>) highlights the excellent agreement and annotates the RMSE.</p>
+<figure>
+  <embed src="../img/dipole_parity.pdf" type="application/pdf" width="100%" height="520px" />
+  <figcaption>Parity plot of QM vs TeraChem dipole magnitudes. Colours denote the absolute deviation |Δ| in Debye.</figcaption>
+</figure>
+
 <h2 id="programmatic-use">Programmatic use</h2>
 <p>See <code>tests/test_dipole.py</code> for a complete, importable example. The test implements <code>_three_dipoles_for_frame</code> inline so you can copy it into your own workflow if the CLI output is not sufficient.</p></div>
             </div>
