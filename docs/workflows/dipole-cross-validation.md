@@ -51,7 +51,7 @@ Use this readout to sanity-check that your fitted charges reproduce the QM dipol
 
 The example notebook in `notebooks/` produces a parity plot comparing the QM dipole magnitude against the TeraChem ESP reconstruction across every frame. The figure below highlights the excellent agreement and annotates the RMSE.
 
-![Parity plot of QM vs TeraChem dipole magnitudes](../img/dipole_parity.png)
+![Parity plot of QM vs TeraChem dipole magnitudes](../img/parity_test.png)
 
 Colours denote the absolute deviation |Δ| in Debye.
 
