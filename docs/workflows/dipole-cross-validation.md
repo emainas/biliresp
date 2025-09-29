@@ -55,6 +55,16 @@ The example notebook in `notebooks/` produces a parity plot comparing the QM dip
 
 Colours denote the absolute deviation |Δ| in Debye.
 
+## ESP charge distributions
+
+The same notebook also aggregates the ESP-unrestrained charges across every frame for nitrogen and oxygen atoms. The first figure overlays per-atom histograms, while the second overlays Gaussian fits extracted from those samples.
+
+![Histograms of ESP-unrestrained charges for nitrogen and oxygen atoms](../img/raw_esp.png)
+
+![Gaussian fits to ESP-unrestrained charge distributions](../img/gaussian_fits.png)
+
+These plots offer a quick sanity check that individual atoms sample a narrow, well-behaved distribution of ESP charges throughout the trajectory.
+
 ## Programmatic use
 
 See `tests/test_dipole.py` for a complete, importable example. The test implements `_three_dipoles_for_frame` inline so you can copy it into your own workflow if the CLI output is not sufficient.

@@ -1,0 +1,73 @@
+
+# ---------- Rotskoff-inspired style (Notebook variant) ----------
+# Larger fonts & crisper DPI for Jupyter/inline displays.
+
+# Typography
+font.family: serif
+font.size: 12.5
+axes.labelsize: 12.5
+axes.titlesize: 14
+legend.fontsize: 11
+xtick.labelsize: 11
+ytick.labelsize: 11
+mathtext.fontset: cm
+
+# Figure / Save
+figure.figsize: 4.2, 4.2
+figure.dpi: 200
+savefig.dpi: 300
+savefig.bbox: tight
+savefig.pad_inches: 0.03
+pdf.fonttype: 42
+ps.fonttype: 42
+
+# Axes & Spines
+axes.linewidth: 1.0
+axes.grid: False
+axes.axisbelow: True
+axes.titlepad: 5.0
+
+# Colors & Lines
+axes.prop_cycle: cycler('color', ['0.0', '0.25', '0.5', '0.7'])
+lines.linewidth: 1.4
+lines.markersize: 5.5
+lines.markeredgewidth: 0.9
+
+# Ticks
+xtick.direction: in
+ytick.direction: in
+xtick.major.size: 5
+ytick.major.size: 5
+xtick.minor.size: 3
+ytick.minor.size: 3
+xtick.major.width: 0.9
+ytick.major.width: 0.9
+xtick.minor.width: 0.7
+ytick.minor.width: 0.7
+xtick.minor.visible: True
+ytick.minor.visible: True
+
+# Legend
+legend.frameon: False
+legend.handlelength: 1.8
+
+# Grid (off by default)
+grid.color: 0.85
+grid.linewidth: 0.6
+grid.alpha: 0.6
+
+# Errorbar caps
+errorbar.capsize: 2.0
+
+# Boxplot / histogram edges
+boxplot.boxprops.linewidth: 1.0
+boxplot.whiskerprops.linewidth: 1.0
+boxplot.capprops.linewidth: 1.0
+boxplot.medianprops.linewidth: 1.0
+
+# Images
+image.cmap: gray
+image.interpolation: none
+
+# Layout
+figure.constrained_layout.use: True
