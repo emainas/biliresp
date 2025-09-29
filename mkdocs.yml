@@ -8,6 +8,7 @@ nav:
   - Workflows:
       - Linear ESP Solver: workflows/linear-esp-solver.md
       - Dipole Cross-Validation: workflows/dipole-cross-validation.md
+      - ESP Charge Distributions: workflows/esp-charge-distributions.md
 
 theme:
   name: mkdocs
