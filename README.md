@@ -19,7 +19,7 @@ Utilities for parsing electrostatic potential output (In [TeraChem](http://www.p
 
 - 📄 A parser (`resp.ParseRespDotOut`) for extracting RESP frames and ESP grids from an ab initio Molecular Dynamics trajectory or QM/MM trajectory (or a single conformer calculation can be used).
 - 🧮 A linear ESP charge fitting implementation (`linearESPcharges.linear`).
-- 📊 Dipole post-processing helpers (`dipole.three_dipoles_for_frame`) and a mass-weighted center-of-mass calculator that reuses xyz element ordering.
+- 📊 Dipole post-processing helpers (see `scripts/print_dipoles.py` and `tests/test_dipole.py`) and a mass-weighted center-of-mass calculator that reuses xyz element ordering.
 - 🛠️ Command-line entry points in `scripts/` for quick comparisons.
 
 ## Documentation

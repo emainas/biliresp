@@ -1,6 +1,6 @@
 # Dipole Cross-Validation
 
-`dipole.three_dipoles_for_frame` compares three sets of dipole moments for a selected frame of a RESP run:
+The helper implemented in `scripts/print_dipoles.py` (and mirrored inside `tests/test_dipole.py`) compares three sets of dipole moments for a selected frame of a RESP run:
 
 1. **QM dipole** reported directly by TeraChem.
 2. **TeraChem dipole** reconstructed from the ESP-unrestrained charges written in `resp.out`.
@@ -49,15 +49,4 @@ Use this readout to sanity-check that your fitted charges reproduce the QM dipol
 
 ## Programmatic use
 
-```python
-from dipole import three_dipoles_for_frame
-
-# Assume you already prepared A, V, Q, resp_charges, coords_bohr via prepare_linear_system(..., return_positions=True)
-dipoles = three_dipoles_for_frame(
-    "data/raw/resp.out",
-    "data/raw/1.pose.xyz",
-    coords_bohr,
-    fitted_result["q"],
-)
-print(dipoles["lagrange_dipole_mag_D"], dipoles["delta_lagrange_vs_qm_mag_D"])
-```
+See `tests/test_dipole.py` for a complete, importable example. The test implements `_three_dipoles_for_frame` inline so you can copy it into your own workflow if the CLI output is not sufficient.
