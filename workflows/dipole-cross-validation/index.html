@@ -111,37 +111,37 @@
                     <div class="col-md-9" role="main">
 
 <h1 id="dipole-cross-validation">Dipole Cross-Validation</h1>
-<p><code>dipole.three_dipoles_last_frame</code> compares three sets of dipole moments for the final frame of a RESP run:</p>
+<p><code>dipole.three_dipoles_for_frame</code> compares three sets of dipole moments for a selected frame of a RESP run:</p>
 <ol>
-<li><strong>QM dipole</strong> reported directly by Terachem.</li>
-<li><strong>ESP unrestrained dipole</strong> computed from RESP's own ESP charges.</li>
-<li><strong>Optimized dipole</strong> generated from your fitted charges.</li>
+<li><strong>QM dipole</strong> reported directly by TeraChem.</li>
+<li><strong>TeraChem dipole</strong> reconstructed from the ESP-unrestrained charges written in <code>resp.out</code>.</li>
+<li><strong>Lagrange dipole</strong> generated from the fitted charges returned by the linear ESP solver.</li>
 </ol>
-<p>The function parses the last "ESP unrestrained charges" block, the center of mass, and the dipole magnitude/vector from <code>resp.out</code>, then computes dipoles in Debye via:</p>
+<p>The helper parses the frame in <code>resp.out</code>, converts the logged center of mass to bohr, and computes dipoles in Debye via:</p>
 <div class="arithmatex">\[
 \mu = \sum_A q_A (R_A - R_{\text{COM}})
 \]</div>
-<p>with coordinates expressed in bohr. It returns a dictionary containing the vectors, magnitudes, and the deltas relative to the QM reference.</p>
+<p>with coordinates expressed in bohr. It also reports a mass-weighted center of mass derived from the supplied geometry <code>.xyz</code> file; you can override the coordinates (Å or bohr) when calling <code>center_of_mass_bohr_from_xyz</code> if you need to reuse RESP geometries directly. The return dictionary contains each dipole vector/magnitude, their deltas relative to the QM reference, and both COM estimates.</p>
 <h2 id="script-entry-point">Script entry point</h2>
 <p><code>scripts/print_dipoles.py</code> bundles the full workflow:</p>
-<pre><code class="language-bash">python scripts/print_dipoles.py data/raw/resp.out data/raw/esp.xyz 78 --frame -1 --solver explicit
+<pre><code class="language-bash">python scripts/print_dipoles.py data/raw/resp.out data/raw/esp.xyz data/raw/1.pose.xyz 78 --frame -1
 </code></pre>
 <ul>
-<li>The script builds the linear system, fits charges (<code>explicit</code> or <code>kkt</code>), and prints the QM, ESP, and optimized dipole magnitudes along with delta vectors.</li>
-<li><code>--frame</code> chooses which RESP frame to analyze (<code>-1</code> = last); <code>--solver</code> swaps between the two solvers exported from <code>linearESPcharges</code>.</li>
+<li>The script builds the linear system, fits charges with the explicit Lagrange projection, and prints the QM, TeraChem, and Lagrange dipoles plus their deltas.</li>
+<li><code>--frame</code> chooses which RESP frame to analyze (<code>-1</code> = last). The geometry <code>.xyz</code> supplies element ordering for mass lookup when computing the mass-weighted COM.</li>
 </ul>
 <h2 id="typical-output">Typical output</h2>
 <pre><code>QM (from resp.out log)
   vector (Debye): [-0.123 ...]
   |μ| (Debye):   2.345678
 
-ESP unrestrained charges
+Terachem charges (RESP log)
   vector (Debye): [-0.121 ...]
   |μ| (Debye):   2.346100
   Δ vector vs QM (Debye): [0.002 ...]
   Δ|μ| vs QM (Debye):     0.000422
 
-Fitted charges (explicit)
+Lagrange multiplier fit (explicit)
   vector (Debye): [-0.120 ...]
   |μ| (Debye):   2.345900
   Δ vector vs QM (Debye): [0.003 ...]
@@ -149,11 +149,16 @@ Fitted charges (explicit)
 </code></pre>
 <p>Use this readout to sanity-check that your fitted charges reproduce the QM dipole within an acceptable tolerance before exporting them to downstream workflows.</p>
 <h2 id="programmatic-use">Programmatic use</h2>
-<pre><code class="language-python">from dipole import three_dipoles_last_frame
+<pre><code class="language-python">from dipole import three_dipoles_for_frame
 
 # Assume you already prepared A, V, Q, resp_charges, coords_bohr via prepare_linear_system(..., return_positions=True)
-dipoles = three_dipoles_last_frame(&quot;data/raw/resp.out&quot;, coords_bohr, fitted_result[&quot;q&quot;])
-print(dipoles[&quot;optimized_dipole_mag_D&quot;], dipoles[&quot;delta_opt_vs_qm_mag_D&quot;])
+dipoles = three_dipoles_for_frame(
+    &quot;data/raw/resp.out&quot;,
+    &quot;data/raw/1.pose.xyz&quot;,
+    coords_bohr,
+    fitted_result[&quot;q&quot;],
+)
+print(dipoles[&quot;lagrange_dipole_mag_D&quot;], dipoles[&quot;delta_lagrange_vs_qm_mag_D&quot;])
 </code></pre></div>
             </div>
         </div>

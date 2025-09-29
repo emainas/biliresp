@@ -117,23 +117,19 @@
 <li><strong>Parse Terachem RESP output</strong> with <code>ParseRespDotOut</code> to obtain atomic positions and RESP ESP charges for each frame.</li>
 <li><strong>Read ESP grid</strong> points from <code>esp.xyz</code>.</li>
 <li><strong>Build the design matrix</strong> <code>A</code> where <code>A[i, j] = 1 / r_ij</code> for grid point <code>i</code> and atom <code>j</code>.</li>
-<li><strong>Solve</strong> the constrained optimization problem <code>A q ≈ V</code> subject to <code>Σ q = Q</code> using one of two solvers:</li>
-<li><code>explicit_solution</code>: closed-form projection that first finds the unconstrained least squares solution and then enforces the total charge (Lagrange multiplier method).</li>
-<li><code>KKTblock_solution</code>: solves the block matrix from the Karush–Kuhn–Tucker conditions in a single shot.</li>
+<li><strong>Solve</strong> the constrained optimization problem <code>A q ≈ V</code> subject to <code>Σ q = Q</code> with <code>explicit_solution</code>, a closed-form projection that first finds the unconstrained least squares solution and then enforces the total charge (Lagrange multiplier method). It accepts an optional <code>ridge</code> hyper-parameter if you want to add a small diagonal Tikhonov term for numerical stability.</li>
 </ol>
-<p>Both solvers accept an optional <code>ridge</code> hyper-parameter if you want to add a small diagonal Tikhonov term for numerical stability.</p>
 <h2 id="script-entry-point">Script entry point</h2>
 <p>The <code>scripts/compare_charges.py</code> wrapper prepares the system and prints per-atom differences between RESP unrestrained charges and the fitted charges:</p>
-<pre><code class="language-bash">python scripts/compare_charges.py data/raw/resp.out data/raw/esp.xyz 78 --frame -1 --solver explicit
+<pre><code class="language-bash">python scripts/compare_charges.py data/raw/resp.out data/raw/esp.xyz 78 --frame -1
 </code></pre>
 <ul>
 <li><code>resp.out</code>: RESP log file containing the ESP unrestrained block.</li>
 <li><code>esp.xyz</code>: grid potentials from TeraChem.</li>
 <li><code>78</code>: number of atoms in the RESP job.</li>
 <li><code>--frame</code>: zero-based frame index (use <code>-1</code> for the last frame).</li>
-<li><code>--solver</code>: either <code>explicit</code> (default) or <code>kkt</code>.</li>
+<li>The output lists each atom index with the RESP charge, the fitted charge, and the difference. A footer prints charge conservation, RMSE, and RRMS metrics so you can quickly gauge the fit quality.</li>
 </ul>
-<p>The output lists each atom index with the RESP charge, the fitted charge, and the difference. A footer prints charge conservation, RMSE, and RRMS metrics so you can quickly gauge the fit quality.</p>
 <h2 id="programmatic-use">Programmatic use</h2>
 <p>You can access the components directly:</p>
 <pre><code class="language-python">from linearESPcharges.linear import prepare_linear_system, explicit_solution
