@@ -47,6 +47,15 @@ Lagrange multiplier fit (explicit)
 
 Use this readout to sanity-check that your fitted charges reproduce the QM dipole within an acceptable tolerance before exporting them to downstream workflows.
 
+## Parity visualisation
+
+The example notebook in `notebooks/` produces a parity plot comparing the QM dipole magnitude against the TeraChem ESP reconstruction across every frame. The figure below (available at `docs/img/dipole_parity.pdf`) highlights the excellent agreement and annotates the RMSE.
+
+<figure>
+  <embed src="../img/dipole_parity.pdf" type="application/pdf" width="100%" height="520px" />
+  <figcaption>Parity plot of QM vs TeraChem dipole magnitudes. Colours denote the absolute deviation |Δ| in Debye.</figcaption>
+</figure>
+
 ## Programmatic use
 
 See `tests/test_dipole.py` for a complete, importable example. The test implements `_three_dipoles_for_frame` inline so you can copy it into your own workflow if the CLI output is not sufficient.

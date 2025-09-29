@@ -23,6 +23,49 @@ python scripts/compare_charges.py data/raw/resp.out data/raw/esp.xyz 78 --frame 
 - `--frame`: zero-based frame index (use `-1` for the last frame).
 - The output lists each atom index with the RESP charge, the fitted charge, and the difference. A footer prints charge conservation, RMSE, and RRMS metrics so you can quickly gauge the fit quality.
 
+## Mathematical derivation
+
+The objective is to minimise the grid misfit while enforcing the desired total charge:
+
+$$
+\begin{aligned}
+\min_{q}\ & \frac{1}{2}\lVert A q - V \rVert_2^2 \\
+\text{s.t.}\ & \mathbf{1}^\top q = Q.
+\end{aligned}
+$$
+
+Using the Lagrangian $\mathcal{L}(q, \lambda) = \tfrac{1}{2}\lVert A q - V \rVert_2^2 + \lambda (\mathbf{1}^\top q - Q)$ gives the stationary conditions
+
+$$
+\nabla_q \mathcal{L} = A^\top(Aq - V) + \lambda\,\mathbf{1} = 0,\qquad \nabla_\lambda \mathcal{L} = \mathbf{1}^\top q - Q = 0.
+$$
+
+Defining $H = A^\top A$ and $g = A^\top V$ leads to the Karush–Kuhn–Tucker system
+
+$$
+\begin{pmatrix}
+H & \mathbf{1} \\
+\mathbf{1}^\top & 0
+\end{pmatrix}
+\begin{pmatrix}
+q \\
+\lambda
+\end{pmatrix} =
+\begin{pmatrix}
+g \\
+Q
+\end{pmatrix}.
+$$
+
+Rather than solving the $(N+1)\times(N+1)$ block system directly, the implementation projects the unconstrained least-squares solution onto the charge-conserving hyperplane:
+
+1. Solve $H q_0 = g$ to obtain the unconstrained solution (`q0`).
+2. Solve $H c = \mathbf{1}$ for the correction direction (`c`).
+3. Compute $\alpha = \mathbf{1}^\top c$ and $s = \mathbf{1}^\top q_0$.
+4. Project: $q = q_0 - \frac{s - Q}{\alpha}\, c$.
+
+If numerical damping is requested, $H$ is replaced with $H + \eta I$ (with a small $\eta > 0$) in the two linear solves above. The procedure yields the same result as the full KKT solve but avoids explicitly forming the block matrix.
+
 ## Programmatic use
 
 You can access the components directly:
