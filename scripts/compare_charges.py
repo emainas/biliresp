@@ -5,7 +5,7 @@ from pathlib import Path
 
 import numpy as np
 
-from linearESPcharges import KKTblock_solution, explicit_solution, prepare_linear_system
+from linearESPcharges import explicit_solution, prepare_linear_system
 
 
 def main() -> None:
@@ -14,7 +14,6 @@ def main() -> None:
     parser.add_argument("esp_xyz", type=Path)
     parser.add_argument("n_atoms", type=int)
     parser.add_argument("--frame", type=int, default=-1, help="Frame index (default: last)")
-    parser.add_argument("--solver", choices=["explicit", "kkt"], default="explicit")
     args = parser.parse_args()
 
     A, V, Q, resp_charges = prepare_linear_system(
@@ -24,7 +23,7 @@ def main() -> None:
         frame_index=args.frame,
     )
 
-    solver = explicit_solution() if args.solver == "explicit" else KKTblock_solution()
+    solver = explicit_solution()
     res = solver.fit(A, V, Q)
 
     diff = res["q"] - resp_charges

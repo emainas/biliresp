@@ -5,7 +5,7 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Dict, Any, Tuple
 
-from resp import ParseRespDotOut
+from resp import ParseRespDotOut, ParseESPXYZ
 
 ANGSTROM_TO_BOHR = 1.8897261254578281
 
@@ -87,37 +87,6 @@ class explicit_solution:
         out.update(_metrics(A, V, q))
         return out
 
-@dataclass
-class KKTblock_solution:
-    """One-shot block Lagrange solve:
-       [A^T A  1][q] = [A^T V]
-       [  1^T   0][λ]   [  Q  ]"""
-    ridge: float = 0.0
-
-    def fit(self, A: np.ndarray, V: np.ndarray, Q: float) -> Dict[str, Any]:
-        _, N = A.shape
-        ones = np.ones(N)
-        ATA = A.T @ A
-        if self.ridge > 0.0:
-            ATA = ATA + self.ridge * np.eye(N)
-        ATV = A.T @ V
-        KKT = np.zeros((N+1, N+1))
-        KKT[:N, :N] = ATA
-        KKT[:N, N] = ones
-        KKT[N, :N] = ones
-        rhs = np.zeros(N+1)
-        rhs[:N] = ATV
-        rhs[N]  = Q
-        try:
-            sol = np.linalg.solve(KKT, rhs)
-        except np.linalg.LinAlgError:
-            sol, *_ = np.linalg.lstsq(KKT, rhs, rcond=None)
-        q = sol[:N]; lam = sol[N]
-        out = {"q": q, "lambda": float(lam), "ATA": ATA, "ATV": ATV}
-        out.update(_metrics(A, V, q))
-        return out
-
-
 def prepare_linear_system(
     resp_out: Path | str,
     esp_xyz: Path | str,
@@ -127,25 +96,27 @@ def prepare_linear_system(
     grid_frame_index: int = 0,
     return_positions: bool = False,
 ) -> Tuple[np.ndarray, np.ndarray, float, np.ndarray] | Tuple[np.ndarray, np.ndarray, float, np.ndarray, np.ndarray]:
-    parser = ParseRespDotOut(resp_out, number_of_atoms)
-    esp_frames, resp_frames = parser.extract_frames_with_esp()
-    grid_frames = parser.extract_esp_from_espxyz(esp_xyz)
+    resp_parser = ParseRespDotOut(resp_out, number_of_atoms)
+    frames = resp_parser.extract_frames()
+    grid_frames = ParseESPXYZ(esp_xyz).frames()
 
     if frame_index is None:
-        frame_index = len(esp_frames) - 1
+        frame_index = len(frames) - 1
     elif frame_index < 0:
-        frame_index = len(esp_frames) + frame_index
+        frame_index = len(frames) + frame_index
 
-    atom_positions_bohr = np.asarray(esp_frames[frame_index].positions, dtype=np.float64)
+    frame = frames[frame_index]
+
+    atom_positions_bohr = np.asarray(frame.positions, dtype=np.float64)
     grid_coordinates_angstrom = np.asarray(grid_frames[grid_frame_index].coordinates, dtype=np.float64)
     grid_coordinates_bohr = grid_coordinates_angstrom * ANGSTROM_TO_BOHR
     esp_values = np.asarray(grid_frames[grid_frame_index].potentials, dtype=np.float64)
 
     design_matrix = build_design_matrix(grid_coordinates_bohr, atom_positions_bohr)
 
-    resp_charges = np.asarray(esp_frames[frame_index].esp_charges, dtype=np.float64)
-    total_charge = float(resp_charges.sum())
+    esp_charges = np.asarray(frame.esp_charges, dtype=np.float64)
+    total_charge = float(esp_charges.sum())
 
     if return_positions:
-        return design_matrix, esp_values, total_charge, resp_charges, atom_positions_bohr
-    return design_matrix, esp_values, total_charge, resp_charges
+        return design_matrix, esp_values, total_charge, esp_charges, atom_positions_bohr
+    return design_matrix, esp_values, total_charge, esp_charges

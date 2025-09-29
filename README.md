@@ -19,7 +19,7 @@ Utilities for parsing electrostatic potential output (In [TeraChem](http://www.p
 
 - 📄 A parser (`resp.ParseRespDotOut`) for extracting RESP frames and ESP grids from an ab initio Molecular Dynamics trajectory or QM/MM trajectory (or a single conformer calculation can be used).
 - 🧮 A linear ESP charge fitting implementation (`linearESPcharges.linear`).
-- 📊 Dipole post-processing helpers (`dipole.three_dipoles_last_frame`).
+- 📊 Dipole post-processing helpers (`dipole.three_dipoles_for_frame`) and a mass-weighted center-of-mass calculator that reuses xyz element ordering.
 - 🛠️ Command-line entry points in `scripts/` for quick comparisons.
 
 ## Documentation
@@ -48,13 +48,13 @@ All commands assume the sample RESP outputs in `data/raw/` and 78 atoms; adjust 
 
 ```bash
 # Compare RESP ESP charges to fitted charges
-python scripts/compare_charges.py data/raw/resp.out data/raw/esp.xyz 78 --frame -1 --solver explicit
+python scripts/compare_charges.py data/raw/resp.out data/raw/esp.xyz 78 --frame -1
 
 # Print QM, ESP, and fitted dipoles for a frame
-python scripts/print_dipoles.py data/raw/resp.out data/raw/esp.xyz 78 --frame -1 --solver explicit
+python scripts/print_dipoles.py data/raw/resp.out data/raw/esp.xyz data/raw/1.pose.xyz 78 --frame -1
 ```
 
-Both scripts accept `--help` for a summary of arguments. Swap `--solver kkt` to use the block KKT solver.
+Both scripts accept `--help` for a summary of arguments.
 
 ## Under development 🧪
 

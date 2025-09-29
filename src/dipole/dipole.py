@@ -1,7 +1,9 @@
-import re
 import numpy as np
 from pathlib import Path
 from typing import Dict, Tuple
+
+from constants.atomic_masses import atomic_masses
+from resp import ParseDotXYZ, ParseRespDotOut
 
 BOHR_PER_ANG = 1.8897261254578281
 DEBYE_PER_E_BOHR = 2.541746
@@ -14,127 +16,149 @@ def _dipole_from_charges(q: np.ndarray, R_bohr: np.ndarray, origin_bohr: np.ndar
     mu_vec_D = DEBYE_PER_E_BOHR * mu_vec_e_bohr
     return mu_vec_D, float(np.linalg.norm(mu_vec_D))
 
-def _parse_last_resp_bits(resp_out_path: str | Path):
+def _normalize_frame_index(frame_index: int, total: int) -> int:
+    if total == 0:
+        raise ValueError("No frames available in resp output")
+    if frame_index is None:
+        frame_index = -1
+    if frame_index < 0:
+        frame_index = total + frame_index
+    if not 0 <= frame_index < total:
+        raise IndexError(f"frame_index {frame_index} out of range for {total} frames")
+    return frame_index
+
+
+def center_of_mass_bohr_from_xyz(
+    xyz_path: str | Path,
+    frame_index: int = -1,
+    *,
+    coords: np.ndarray | None = None,
+    coords_unit: str = "ang",
+) -> np.ndarray:
+    """Mass-weighted center of mass in bohr using element labels from an xyz file.
+
+    ``coords`` lets callers supply any coordinates (e.g., from RESP output) while
+    still reusing the element-to-mass mapping from the xyz file.
     """
-    Parse from resp.out (LAST frame only):
-      - ESP unrestrained charges block: (symbols, coords_bohr, charges)
-      - CENTER OF MASS line (Å -> bohr)
-      - DIPOLE MOMENT line (Debye)
+
+    frames = ParseDotXYZ(xyz_path).elements()
+    total_frames = len(frames)
+    if total_frames == 0:
+        raise ValueError("No frames available in xyz file")
+    try:
+        idx = _normalize_frame_index(frame_index, total_frames)
+    except IndexError:
+        idx = _normalize_frame_index(-1, total_frames)
+
+    frame = frames[idx]
+    symbols = frame.symbols
+    n_atoms = len(symbols)
+
+    if coords is None:
+        coords_ang = np.asarray(frame.coordinates, dtype=float)
+    else:
+        coords_arr = np.asarray(coords, dtype=float)
+        if coords_arr.shape != (n_atoms, 3):
+            raise ValueError(
+                f"Custom coordinates shape {coords_arr.shape} does not match number of atoms ({n_atoms})"
+            )
+        unit = coords_unit.lower()
+        if unit in {"ang", "angs", "angstrom", "angstroms"}:
+            coords_ang = coords_arr
+        elif unit in {"bohr", "a0", "au"}:
+            coords_ang = coords_arr / BOHR_PER_ANG
+        else:
+            raise ValueError("coords_unit must be 'ang' (angstrom) or 'bohr'")
+
+    try:
+        masses = np.array([atomic_masses[symbol] for symbol in symbols], dtype=float)
+    except KeyError as exc:
+        missing = exc.args[0]
+        raise KeyError(f"Atomic mass for element '{missing}' not found in atomic_masses dictionary") from exc
+
+    total_mass = masses.sum()
+    if total_mass == 0.0:
+        raise ValueError("Total mass computed as zero; check atomic_masses dictionary")
+
+    com_ang = (masses[:, None] * coords_ang).sum(axis=0) / total_mass
+    return com_ang * BOHR_PER_ANG
+
+
+def three_dipoles_for_frame(
+    resp_out_path: str | Path,
+    xyz_path: str | Path,
+    R_bohr_frame: np.ndarray,
+    q_opt: np.ndarray,
+    *,
+    frame_index: int = -1,
+) -> Dict[str, np.ndarray | float]:
     """
-    text = Path(resp_out_path).read_text(errors="ignore")
-    lines = text.splitlines()
+    Compute and return the three dipoles for the requested frame, using
+    the RESP parser to obtain reference quantities and the mass-weighted
+    center of mass derived from the xyz file.
+    """
+    q_opt = np.asarray(q_opt, dtype=float)
+    R_bohr_frame = np.asarray(R_bohr_frame, dtype=float)
+    if R_bohr_frame.shape[0] != q_opt.shape[0]:
+        raise ValueError("Number of coordinates and charges must match")
 
-    # Last ESP unrestrained block
-    blocks, cap, cur = [], False, []
-    for line in lines:
-        if re.search(r"ESP\s+unrestrained\s+charges", line, flags=re.I):
-            if cur: blocks.append(cur); cur = []
-            cap = True; continue
-        if cap:
-            if re.search(r"ESP\s+restrained\s+charges", line, flags=re.I):
-                if cur: blocks.append(cur); cur = []
-                cap = False; continue
-            if re.match(r"\s*-{3,}\s*$", line) or re.search(r"^\s*Atom\s+X\s+Y\s+Z\s+Charge\s+Exposure", line, flags=re.I):
-                continue
-            s = line.strip()
-            if not s:
-                if cur: blocks.append(cur); cur = []
-                cap = False; continue
-            parts = s.split()
-            if len(parts) >= 6:
-                sym = parts[0]
-                x, y, z = map(float, parts[1:4])  # bohr (in resp.out table)
-                q = float(parts[4])               # column 5 = charge
-                cur.append((sym, x, y, z, q))
-    if cur: blocks.append(cur)
-    if not blocks:
-        raise RuntimeError("No 'ESP unrestrained charges' blocks found in resp.out")
-    last = blocks[-1]
-    symbols_last = [t[0] for t in last]
-    coords_last_bohr = np.array([[t[1], t[2], t[3]] for t in last], float)
-    charges_last = np.array([t[4] for t in last], float)
+    parser = ParseRespDotOut(resp_out_path, q_opt.shape[0])
+    frames = parser.extract_frames()
+    idx = _normalize_frame_index(frame_index, len(frames))
+    frame = frames[idx]
 
-    # Last COM (Å -> bohr)
-    com_match = None
-    for m in re.finditer(r"CENTER OF MASS:\s*\{([^}]+)\}\s*ANGS", text, flags=re.I):
-        com_match = m
-    if not com_match:
-        raise RuntimeError("CENTER OF MASS not found in resp.out")
-    com_vals_ang = list(map(float, com_match.group(1).replace(",", " ").split()))
-    if len(com_vals_ang) != 3:
-        raise RuntimeError("CENTER OF MASS line did not parse 3 numbers")
-    com_bohr = np.array(com_vals_ang, float) * BOHR_PER_ANG
+    if frame.center_of_mass is None:
+        raise ValueError("CENTER OF MASS data missing in resp.out for selected frame")
+    if frame.dipole_moment_vector is None or frame.dipole_moment_magnitude is None:
+        raise ValueError("DIPOLE MOMENT data missing in resp.out for selected frame")
 
-    # Last QM dipole (Debye)
-    dip_match = None
-    dip_pattern = re.compile(
-        r"DIPOLE MOMENT:\s*\{([^}]+)\}\s*\(\|D\|\s*=\s*([0-9.Ee+-]+)\)\s*DEBYE",
-        re.I,
+    com_bohr_resp = np.asarray(frame.center_of_mass, dtype=float) * BOHR_PER_ANG
+    qm_vec = np.asarray(frame.dipole_moment_vector, dtype=float)
+    qm_mag = float(frame.dipole_moment_magnitude)
+
+    q_terachem = np.asarray(frame.esp_charges, dtype=float)
+    R_resp = np.asarray(frame.positions, dtype=float)
+    if q_terachem.shape[0] != q_opt.shape[0]:
+        raise ValueError("RESP and optimized charge arrays have different lengths")
+
+    terachem_vec, terachem_mag = _dipole_from_charges(q_terachem, R_resp, com_bohr_resp)
+    lagrange_vec, lagrange_mag = _dipole_from_charges(q_opt, R_bohr_frame, com_bohr_resp)
+
+    com_bohr_mass = center_of_mass_bohr_from_xyz(
+        xyz_path,
+        frame_index=frame_index,
+        coords=R_bohr_frame,
+        coords_unit="bohr",
     )
-    for m in dip_pattern.finditer(text):
-        dip_match = m
-    if not dip_match:
-        raise RuntimeError("DIPOLE MOMENT not found in resp.out")
-    qm_vec_vals = list(map(float, dip_match.group(1).replace(",", " ").split()))
-    qm_dipole_vec_D = np.array(qm_vec_vals, float)
-    qm_dipole_mag_D = float(dip_match.group(2))
 
     return {
-        "symbols_last": symbols_last,
-        "coords_last_bohr": coords_last_bohr,
-        "charges_esp_unrestrained": charges_last,
-        "com_bohr": com_bohr,
-        "qm_dipole_vec_D": qm_dipole_vec_D,
-        "qm_dipole_mag_D": qm_dipole_mag_D,
-    }
-
-def three_dipoles_last_frame(resp_out_path: str | Path,
-                             R_bohr_lastframe: np.ndarray,
-                             q_opt: np.ndarray) -> Dict[str, np.ndarray | float]:
-    """
-    Compute and return the three dipoles for the LAST frame:
-
-    Inputs:
-      - resp_out_path: path to resp.out (must contain the COM & dipole lines shown)
-      - R_bohr_lastframe: (N,3) coordinates in BOHR **from the LAST frame in resp.out**
-      - q_opt: (N,) your optimized charges (unitless)
-
-    Returns dict with vectors & magnitudes (Debye) for:
-      - 'qm_dipole_vec_D', 'qm_dipole_mag_D'
-      - 'esp_unrestrained_dipole_vec_D', 'esp_unrestrained_dipole_mag_D'
-      - 'optimized_dipole_vec_D', 'optimized_dipole_mag_D'
-      plus deltas vs QM.
-    """
-    parsed = _parse_last_resp_bits(resp_out_path)
-
-    # 1) QM dipole (already Debye)
-    qm_vec = parsed["qm_dipole_vec_D"]
-    qm_mag = parsed["qm_dipole_mag_D"]
-
-    # 2) Dipole from Terachem's ESP-unrestrained charges (use coords and COM from that last block)
-    q_tc = parsed["charges_esp_unrestrained"]
-    R_tc = parsed["coords_last_bohr"]
-    COM = parsed["com_bohr"]
-    esp_vec, esp_mag = _dipole_from_charges(q_tc, R_tc, COM)
-
-    # 3) Dipole from YOUR optimized charges using YOUR last-frame coordinates
-    opt_vec, opt_mag = _dipole_from_charges(q_opt, R_bohr_lastframe, COM)
-
-    return {
-        # QM
         "qm_dipole_vec_D": qm_vec,
         "qm_dipole_mag_D": qm_mag,
-        # ESP (Terachem unrestrained)
-        "esp_unrestrained_dipole_vec_D": esp_vec,
-        "esp_unrestrained_dipole_mag_D": esp_mag,
-        # Yours
-        "optimized_dipole_vec_D": opt_vec,
-        "optimized_dipole_mag_D": opt_mag,
-        # Differences vs QM
-        "delta_esp_vs_qm_vec_D": esp_vec - qm_vec,
-        "delta_esp_vs_qm_mag_D": esp_mag - qm_mag,
-        "delta_opt_vs_qm_vec_D": opt_vec - qm_vec,
-        "delta_opt_vs_qm_mag_D": opt_mag - qm_mag,
-        # For reference
-        "COM_bohr": COM,
+        "terachem_dipole_vec_D": terachem_vec,
+        "terachem_dipole_mag_D": terachem_mag,
+        "lagrange_dipole_vec_D": lagrange_vec,
+        "lagrange_dipole_mag_D": lagrange_mag,
+        "delta_terachem_vs_qm_vec_D": terachem_vec - qm_vec,
+        "delta_terachem_vs_qm_mag_D": terachem_mag - qm_mag,
+        "delta_lagrange_vs_qm_vec_D": lagrange_vec - qm_vec,
+        "delta_lagrange_vs_qm_mag_D": lagrange_mag - qm_mag,
+        "COM_bohr_resp": com_bohr_resp,
+        "COM_bohr_mass": com_bohr_mass,
     }
+
+
+def three_dipoles_last_frame(
+    resp_out_path: str | Path,
+    xyz_path: str | Path,
+    R_bohr_lastframe: np.ndarray,
+    q_opt: np.ndarray,
+) -> Dict[str, np.ndarray | float]:
+    """Backward-compatible helper that defaults to the final frame."""
+
+    return three_dipoles_for_frame(
+        resp_out_path,
+        xyz_path,
+        R_bohr_lastframe,
+        q_opt,
+        frame_index=-1,
+    )
