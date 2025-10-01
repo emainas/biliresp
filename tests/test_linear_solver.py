@@ -10,7 +10,7 @@ from linearESPcharges.linear import (
     explicit_solution,
     prepare_linear_system,
 )
-from resp import ParseRespDotOut
+from parser import ParseRespDotOut
 
 
 DATA_DIR = Path(__file__).resolve().parents[1] / "data" / "raw"

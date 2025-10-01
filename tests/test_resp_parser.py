@@ -4,7 +4,7 @@ from pathlib import Path
 
 import pytest
 
-from resp import ParseRespDotOut, ParseESPXYZ, ParseDotXYZ
+from parser import ParseRespDotOut, ParseESPXYZ, ParseDotXYZ
 
 
 DATA_DIR = Path(__file__).resolve().parents[1] / "data" / "raw"

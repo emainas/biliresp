@@ -34,6 +34,21 @@ source .venv/bin/activate
 python -m pip install -e .
 ```
 
+### Conda environment
+
+If you prefer Conda, the repository ships with an environment specification that
+matches the `biliresp` environment used during development:
+
+```bash
+conda env create -f environment.yml
+conda activate biliresp
+python -m pip install -e .
+```
+
+This environment pulls in `numpy`, `networkx`, and `rdkit` from `conda-forge`
+and leaves the project itself managed through `pip install -e .` so that edits in
+`src/` are immediately available.
+
 ## Run the test suite ✅
 
 ```bash

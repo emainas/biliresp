@@ -6,7 +6,7 @@ from typing import Dict
 
 import numpy as np
 
-from resp import ParseRespDotOut
+from parser import ParseRespDotOut
 from linearESPcharges.linear import explicit_solution, prepare_linear_system
 from dipole.dipole import (
     BOHR_PER_ANG,

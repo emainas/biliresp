@@ -3,7 +3,7 @@ from pathlib import Path
 from typing import Dict, Tuple
 
 from constants.atomic_masses import atomic_masses
-from resp import ParseDotXYZ, ParseRespDotOut
+from parser import ParseDotXYZ, ParseRespDotOut
 
 BOHR_PER_ANG = 1.8897261254578281
 DEBYE_PER_E_BOHR = 2.541746

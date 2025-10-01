@@ -5,6 +5,7 @@ site_author: E. Mainas
 nav:
   - Home: index.md
   - Getting Started: getting-started.md
+  - Symmetry: symmetry.md
   - Workflows:
       - Linear ESP Solver: workflows/linear-esp-solver.md
       - Dipole Cross-Validation: workflows/dipole-cross-validation.md
