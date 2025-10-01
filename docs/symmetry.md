@@ -19,20 +19,17 @@ Each bucket contains the indices of atoms that are indistinguishable after `r`
 rounds of WL refinement. Increase `radius` when you need a deeper comparison of
 atomic environments.
 
-<figure>
-  <img src="img/network.png" alt="Hydrogen-less network" />
-  <figcaption>Hydrogen-less molecular network used for WL refinement.</figcaption>
-</figure>
+![Hydrogen-less network](./img/network.png)
 
-<figure>
-  <img src="img/symmetry_r10.png" alt="WL buckets at radius 10" />
-  <figcaption>Detected symmetry buckets (radius 10).</figcaption>
-</figure>
+Hydrogen-less molecular network used for WL refinement.
 
-<figure>
-  <img src="img/symmetry_r15.png" alt="WL buckets at radius 15" />
-  <figcaption>Detected symmetry buckets (radius 15).</figcaption>
-</figure>
+![WL buckets at radius 10](./img/symmetry_r10.png)
+
+Detected symmetry buckets (radius 10).
+
+![WL buckets at radius 15](./img/symmetry_r15.png)
+
+Detected symmetry buckets (radius 15).
 
 The figure above starts from the hydrogen-less network of the biliverdin
 fragment. The colourings correspond to WL buckets evaluated at radii 10 and 15,
