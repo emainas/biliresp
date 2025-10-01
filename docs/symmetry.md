@@ -21,9 +21,9 @@ atomic environments.
 
 ![Hydrogen-less network](img/network.png)
 
-| Radius 10 | Radius 15 |
-| --- | --- |
-| ![WL buckets at r=10](img/symmetry_r10.png) | ![WL buckets at r=15](img/symmetry_r15.png) |
+![WL buckets at radius 10](img/symmetry_r10.png)
+
+![WL buckets at radius 15](img/symmetry_r15.png)
 
 The figure above starts from the hydrogen-less network of the biliverdin
 fragment. The colourings correspond to WL buckets evaluated at radii 10 and 15,
