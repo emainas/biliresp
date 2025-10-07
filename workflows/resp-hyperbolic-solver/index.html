@@ -8,7 +8,7 @@
         <meta name="author" content="E. Mainas">
         
         <link rel="shortcut icon" href="../../img/favicon.ico">
-        <title>Dipole Cross-Validation - BiliResp</title>
+        <title>RESP Hyperbolic Solver - BiliResp</title>
         <link href="../../css/bootstrap.min.css" rel="stylesheet">
         <link href="../../css/fontawesome.min.css" rel="stylesheet">
         <link href="../../css/brands.min.css" rel="stylesheet">
@@ -49,7 +49,7 @@
 </li>
                                     
 <li>
-    <a href="../resp-hyperbolic-solver/" class="dropdown-item">RESP Hyperbolic Solver</a>
+    <a href="./" class="dropdown-item active" aria-current="page">RESP Hyperbolic Solver</a>
 </li>
                                     
 <li>
@@ -57,7 +57,7 @@
 </li>
                                     
 <li>
-    <a href="./" class="dropdown-item active" aria-current="page">Dipole Cross-Validation</a>
+    <a href="../dipole-cross-validation/" class="dropdown-item">Dipole Cross-Validation</a>
 </li>
                                     
 <li>
@@ -74,12 +74,12 @@
                             </a>
                         </li>
                             <li class="nav-item">
-                                <a rel="prev" href="../linear-esp-solver/" class="nav-link">
+                                <a rel="prev" href="../../symmetry/" class="nav-link">
                                     <i class="fa fa-arrow-left"></i> Previous
                                 </a>
                             </li>
                             <li class="nav-item">
-                                <a rel="next" href="../esp-charge-distributions/" class="nav-link">
+                                <a rel="next" href="../linear-esp-solver/" class="nav-link">
                                     Next <i class="fa fa-arrow-right"></i>
                                 </a>
                             </li>
@@ -101,21 +101,29 @@
     <div id="toc-collapse" class="navbar-collapse collapse card bg-body-tertiary">
         <ul class="nav flex-column">
             
-            <li class="nav-item" data-bs-level="1"><a href="#dipole-cross-validation" class="nav-link">Dipole Cross-Validation</a>
+            <li class="nav-item" data-bs-level="1"><a href="#resp-hyperbolic-solver" class="nav-link">RESP Hyperbolic Solver</a>
               <ul class="nav flex-column">
-            <li class="nav-item" data-bs-level="2"><a href="#script-entry-point" class="nav-link">Script entry point</a>
-              <ul class="nav flex-column">
-              </ul>
-            </li>
-            <li class="nav-item" data-bs-level="2"><a href="#typical-output" class="nav-link">Typical output</a>
+            <li class="nav-item" data-bs-level="2"><a href="#objective-and-restraint" class="nav-link">Objective and Restraint</a>
               <ul class="nav flex-column">
               </ul>
             </li>
-            <li class="nav-item" data-bs-level="2"><a href="#parity-visualisation" class="nav-link">Parity visualisation</a>
+            <li class="nav-item" data-bs-level="2"><a href="#kkt-system" class="nav-link">KKT System</a>
               <ul class="nav flex-column">
               </ul>
             </li>
-            <li class="nav-item" data-bs-level="2"><a href="#programmatic-use" class="nav-link">Programmatic use</a>
+            <li class="nav-item" data-bs-level="2"><a href="#newtonkrylov-solve" class="nav-link">Newton–Krylov Solve</a>
+              <ul class="nav flex-column">
+              </ul>
+            </li>
+            <li class="nav-item" data-bs-level="2"><a href="#diagnostics-and-outputs" class="nav-link">Diagnostics and Outputs</a>
+              <ul class="nav flex-column">
+              </ul>
+            </li>
+            <li class="nav-item" data-bs-level="2"><a href="#masking-behaviour" class="nav-link">Masking Behaviour</a>
+              <ul class="nav flex-column">
+              </ul>
+            </li>
+            <li class="nav-item" data-bs-level="2"><a href="#usage-example" class="nav-link">Usage Example</a>
               <ul class="nav flex-column">
               </ul>
             </li>
@@ -126,50 +134,86 @@
 </div></div>
                     <div class="col-md-9" role="main">
 
-<h1 id="dipole-cross-validation">Dipole Cross-Validation</h1>
-<p>The helper implemented in <code>scripts/print_dipoles.py</code> (and mirrored inside <code>tests/test_dipole.py</code>) compares three sets of dipole moments for a selected frame of a RESP run:</p>
-<ol>
-<li><strong>QM dipole</strong> reported directly by TeraChem.</li>
-<li><strong>TeraChem dipole</strong> reconstructed from the ESP-unrestrained charges written in <code>resp.out</code>.</li>
-<li><strong>Lagrange dipole</strong> generated from the fitted charges returned by the linear ESP solver.</li>
-</ol>
-<p>The helper parses the frame in <code>resp.out</code>, converts the logged center of mass to bohr, and computes dipoles in Debye via:</p>
+<h1 id="resp-hyperbolic-solver">RESP Hyperbolic Solver</h1>
+<p>The RESP workflow augments the linear ESP fit with a nonlinear, hyperbolic restraint that mirrors the setup used by TeraChem. All routines live in <code>resp.resp</code>, with <code>fit_resp_charges</code> acting as the main entry point.</p>
+<h2 id="objective-and-restraint">Objective and Restraint</h2>
+<p>Given a design matrix <span class="arithmatex">\(A \in \mathbb{R}^{M \times N}\)</span>, ESP grid values <span class="arithmatex">\(V \in \mathbb{R}^{M}\)</span>, and a target total charge <span class="arithmatex">\(Q\)</span>, we minimise the penalised loss</p>
 <div class="arithmatex">\[
-\mu = \sum_A q_A (R_A - R_{\text{COM}})
+\mathcal{L}(q) = \|A q - V\|_2^2 + R(q),
 \]</div>
-<p>with coordinates expressed in bohr. It also reports a mass-weighted center of mass derived from the supplied geometry <code>.xyz</code> file; you can override the coordinates (Å or bohr) when calling <code>center_of_mass_bohr_from_xyz</code> if you need to reuse RESP geometries directly. The return dictionary contains each dipole vector/magnitude, their deltas relative to the QM reference, and both COM estimates.</p>
-<h2 id="script-entry-point">Script entry point</h2>
-<p><code>scripts/print_dipoles.py</code> bundles the full workflow:</p>
-<pre><code class="language-bash">python scripts/print_dipoles.py data/raw/resp.out data/raw/esp.xyz data/raw/1.pose.xyz 78 --frame -1
-</code></pre>
+<p>subject to charge conservation</p>
+<div class="arithmatex">\[
+\mathbf{1}^\top q = Q.
+\]</div>
+<p>The restraint couples to a mask <span class="arithmatex">\(m \in \{0,1\}^N\)</span> that selects which atoms participate (all atoms by default):</p>
+<div class="arithmatex">\[
+R(q) = a \sum_{i: m_i = 1} \left(\sqrt{(q_i - q_0)^2 + b^2} - b\right).
+\]</div>
+<p>Parameters <span class="arithmatex">\((a, b, q_0)\)</span> form the <code>HyperbolicRestraint</code>. The gradient needed for optimisation is</p>
+<div class="arithmatex">\[
+\frac{\partial R}{\partial q_i} =
+\begin{cases}
+a\,\dfrac{q_i - q_0}{\sqrt{(q_i - q_0)^2 + b^2}}, &amp; m_i = 1,\\[1.2ex]
+0, &amp; m_i = 0.
+\end{cases}
+\]</div>
+<h2 id="kkt-system">KKT System</h2>
+<p>Introducing a Lagrange multiplier <span class="arithmatex">\(\lambda\)</span> for the charge constraint yields the first-order optimality conditions</p>
+<div class="arithmatex">\[
+\nabla_q \mathcal{L}(q) + \lambda \mathbf{1} = 0,
+\qquad
+\mathbf{1}^\top q - Q = 0,
+\]</div>
+<p>where <span class="arithmatex">\(\nabla_q \mathcal{L}(q) = 2 A^\top (A q - V) + \nabla R(q)\)</span>.</p>
+<p>Stacking the unknowns into <span class="arithmatex">\(x = (q, \lambda)\)</span> gives a nonlinear system</p>
+<div class="arithmatex">\[
+F(x) =
+\begin{bmatrix}
+2 A^\top (A q - V) + \nabla R(q) + \lambda \mathbf{1} \\
+\mathbf{1}^\top q - Q
+\end{bmatrix}
+= 0.
+\]</div>
+<h2 id="newtonkrylov-solve">Newton–Krylov Solve</h2>
+<p><code>fit_resp_charges</code> calls SciPy's <code>newton_krylov</code> on <span class="arithmatex">\(F(x)\)</span>. The solver uses an initial guess <span class="arithmatex">\((q^{(0)}, \lambda^{(0)})\)</span> built from the linear ESP solution and zero Lagrange multiplier. Each iteration:</p>
+<ol>
+<li>Evaluates <span class="arithmatex">\(F(x)\)</span> and numerically approximates the Jacobian–vector product.</li>
+<li>Solves for a correction using a Krylov subspace method.</li>
+<li>Updates <span class="arithmatex">\(x\)</span> with the computed Newton step.</li>
+</ol>
+<p>No line search is performed, so the loss history can oscillate slightly before convergence. Convergence is declared when the infinity norm of <span class="arithmatex">\(F(x)\)</span> drops below the requested tolerance.</p>
+<h2 id="diagnostics-and-outputs">Diagnostics and Outputs</h2>
 <ul>
-<li>The script builds the linear system, fits charges with the explicit Lagrange projection, and prints the QM, TeraChem, and Lagrange dipoles plus their deltas.</li>
-<li><code>--frame</code> chooses which RESP frame to analyze (<code>-1</code> = last). The geometry <code>.xyz</code> supplies element ordering for mass lookup when computing the mass-weighted COM.</li>
+<li>The returned dictionary includes the fitted charges, Lagrange multiplier, loss breakdown (<code>loss</code>, <code>ls_term</code>, <code>restraint</code>), RMSE/RRMS, total charge information, the boolean restraint mask, and the running <code>loss_history</code>.</li>
+<li><code>_loss_terms</code> evaluates the same objective outside the solver loop and is reused by the public API for consistency.</li>
+<li><code>kkt_residual_at</code> re-computes <span class="arithmatex">\(F(x)\)</span> for any charge vector, making it easy to compare against reference data such as TeraChem outputs or to audit convergence criteria.</li>
+<li><code>plot_loss_history</code> visualises <code>loss_history</code>. If <code>notebooks/prl.mplstyle</code> exists, it is applied automatically to keep project plots consistent; otherwise the Matplotlib defaults are used.</li>
 </ul>
-<h2 id="typical-output">Typical output</h2>
-<pre><code>QM (from resp.out log)
-  vector (Debye): [-0.123 ...]
-  |μ| (Debye):   2.345678
+<h2 id="masking-behaviour">Masking Behaviour</h2>
+<p>By default every atom is restrained. Passing <code>restrain_all_atoms=False</code> selects only heavy atoms, reproducing the legacy RESP convention. The solver stores the mask used in the <code>mask</code> entry of the result bundle.</p>
+<h2 id="usage-example">Usage Example</h2>
+<pre><code class="language-python">from pathlib import Path
+from resp.resp import HyperbolicRestraint, fit_resp_charges
 
-Terachem charges (RESP log)
-  vector (Debye): [-0.121 ...]
-  |μ| (Debye):   2.346100
-  Δ vector vs QM (Debye): [0.002 ...]
-  Δ|μ| vs QM (Debye):     0.000422
+resp_out = Path(&quot;data/raw/resp.out&quot;)
+esp_xyz = Path(&quot;data/raw/esp.xyz&quot;)
+geometry_xyz = Path(&quot;data/raw/1.pose.xyz&quot;)
 
-Lagrange multiplier fit (explicit)
-  vector (Debye): [-0.120 ...]
-  |μ| (Debye):   2.345900
-  Δ vector vs QM (Debye): [0.003 ...]
-  Δ|μ| vs QM (Debye):     0.000222
+restraint = HyperbolicRestraint(a=5e-4, b=1e-3, q0=0.0)
+result = fit_resp_charges(
+    resp_out,
+    esp_xyz,
+    geometry_xyz,
+    number_of_atoms=78,
+    frame_index=-1,
+    restraint=restraint,
+    restrain_all_atoms=True,
+    save_loss_plot=True,
+)
+
+print(result[&quot;loss&quot;], result[&quot;sum_q&quot;])
 </code></pre>
-<p>Use this readout to sanity-check that your fitted charges reproduce the QM dipole within an acceptable tolerance before exporting them to downstream workflows.</p>
-<h2 id="parity-visualisation">Parity visualisation</h2>
-<p>The example notebook in <code>notebooks/</code> produces a parity plot comparing the QM dipole magnitude against the TeraChem ESP reconstruction across every frame. The figure below highlights the excellent agreement and annotates the RMSE.</p>
-<p><img alt="Parity plot of QM vs TeraChem dipole magnitudes" src="../../img/parity_test.png" /></p>
-<p>Colours denote the absolute deviation |Δ| in Debye.</p>
-<h2 id="programmatic-use">Programmatic use</h2>
-<p>See <code>tests/test_dipole.py</code> for a complete, importable example. The test implements <code>_three_dipoles_for_frame</code> inline so you can copy it into your own workflow if the CLI output is not sufficient.</p></div>
+<p>This mirrors the workflow exercised in <code>tests/test_resp_solver.py</code>, where the fitted charges match the final RESP frame from TeraChem to within <span class="arithmatex">\(10^{-5}\)</span>.</p></div>
             </div>
         </div>
 
