@@ -189,6 +189,7 @@ F(x) =
 <li><code>kkt_residual_at</code> re-computes <span class="arithmatex">\(F(x)\)</span> for any charge vector, making it easy to compare against reference data such as TeraChem outputs or to audit convergence criteria.</li>
 <li><code>plot_loss_history</code> visualises <code>loss_history</code>. If <code>notebooks/prl.mplstyle</code> exists, it is applied automatically to keep project plots consistent; otherwise the Matplotlib defaults are used.</li>
 </ul>
+<p><img alt="RESP loss history" src="../../img/resp_loss.png" /></p>
 <h2 id="masking-behaviour">Masking Behaviour</h2>
 <p>By default every atom is restrained. Passing <code>restrain_all_atoms=False</code> selects only heavy atoms, reproducing the legacy RESP convention. The solver stores the mask used in the <code>mask</code> entry of the result bundle.</p>
 <h2 id="usage-example">Usage Example</h2>
