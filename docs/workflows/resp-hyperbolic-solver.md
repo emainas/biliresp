@@ -72,6 +72,8 @@ No line search is performed, so the loss history can oscillate slightly before c
 - `kkt_residual_at` re-computes $F(x)$ for any charge vector, making it easy to compare against reference data such as TeraChem outputs or to audit convergence criteria.
 - `plot_loss_history` visualises `loss_history`. If `notebooks/prl.mplstyle` exists, it is applied automatically to keep project plots consistent; otherwise the Matplotlib defaults are used.
 
+![RESP loss history](../img/resp_loss.png)
+
 ## Masking Behaviour
 
 By default every atom is restrained. Passing `restrain_all_atoms=False` selects only heavy atoms, reproducing the legacy RESP convention. The solver stores the mask used in the `mask` entry of the result bundle.
